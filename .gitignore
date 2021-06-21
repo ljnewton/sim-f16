@@ -1,2 +1,5 @@
 
 *.mat
+
+*.slxc
+ratelimiting_test.slx
