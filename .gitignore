@@ -1,6 +1,4 @@
-
 *.mat
-
 *.slxc
 ratelimiting_test.slx
 slprj/_sfprj/f16_simulink/amsi_serial.mat
@@ -11,3 +9,6 @@ slprj/sim/varcache/f16_simulink/tmwinternal/simulink_cache.xml
 slprj/sim/varcache/f16_simulink/checksumOfCache.mat
 *.autosave
 *.xml
+*.asv
+
+slprj/
