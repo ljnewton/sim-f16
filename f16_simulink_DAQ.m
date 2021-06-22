@@ -1,8 +1,8 @@
-Vt = 400;   %ft/sec
+Vt = 450;   %ft/sec
 
 global x xcgr coord stab gamma turnrate utrim
 x = [Vt 0 0 0 0 0 0 0 0 0 0 10000 0]';
-xcgr = 0.33;
+xcgr = 0.3;
 coord = 0;
 stab = 0;
 gamma = 0 * pi/180; % radians
@@ -24,15 +24,23 @@ f16_simulink_setup
 
 %% Load Individual Test Case Here
 
-Kp = 0.7;
+Kp = 0.65;
+Kpi = 0.001;
 Kt = 0.539;
 Kti = 0;
-pilot_delay = 0.25;
+pilot_delay = 0.15;
 
 ratelim_on = 1;
 
-thetaref_amp = 20;
-thetaref_per = 10;
+thetaref_amp = 15;
+thetaref_per = 2;
+
+pulse_on = 0;
+pulsewidth = 0.5;
+pulseend = wavestart + pulsewidth;
+OL_cmd = 15;
+
+%%
 
 disp('CTRL-C here to terminate DAQ; any key to continue')
 pause
@@ -50,7 +58,7 @@ footer = '.mat';
 model = 'f16_simulink';
 
 pitch_limiter = 70;
-sim_T = 30;
+sim_T = 60;
 
 for ratelim_on = ratelim_toggle_vec
     for Kp = Kp_vec
