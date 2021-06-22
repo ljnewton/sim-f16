@@ -1,5 +1,3 @@
-wavestart = 5;
-
 f16_properties
 
 xPQ = mass.Jxz*(mass.Jxx - mass.Jyy + mass.Jzz);

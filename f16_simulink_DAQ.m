@@ -24,16 +24,19 @@ f16_simulink_setup
 
 %% Load Individual Test Case Here
 
+wavestart = 5;
+dt = 0.01;
+
 Kp = 0.65;
-Kpi = 0.001;
-Kt = 0.539;
+Kpi = 0.01;
+Kt = 0.439;
 Kti = 0;
 pilot_delay = 0.15;
 
 ratelim_on = 1;
 
-thetaref_amp = 15;
-thetaref_per = 2;
+thetaref_amp = 20;
+thetaref_per = 4;
 
 pulse_on = 0;
 pulsewidth = 0.5;
@@ -69,6 +72,8 @@ for ratelim_on = ratelim_toggle_vec
                 disp([ratelim_on Kp thetaref_amp thetaref_per])
                 load_system(model);
                 simdata = sim(model,sim_T);
+                
+                simdata = time_interp(simdata,dt);
 
                 save(['./F-16 Data/f16_' num2str(count,'%05.f') footer],'simdata')
 
@@ -81,7 +86,9 @@ for ratelim_on = ratelim_toggle_vec
 end
 
 
-%% Signal limiter to post process data
+%% Auxiliary Functions
+
+% Signal limiter to post process data: replaced by early-termination block
 
 % [bwout, unstable] = signal_limiter(out);
 % 
@@ -101,6 +108,22 @@ end
 %     out.xout = out.xout(window,:);
 %     out.an = out.an(window,:);
 % end
+
+% Time interpolation to make all output signals a fixed time step
+% Variable-step solvers are a lot faster! -> use variable-step solver then
+% use this function to post-process
+
+function simdata_interp = time_interp(simdata,dt)
+    datanames = who(simdata);
+    tf = simdata.tout(end);
+    tnew = (0:dt:tf)';
+    
+    for i = 1:length(datanames)
+        name = datanames{i};
+        data = simdata.(name);
+        simdata_interp.(name) = interp1(simdata.tout,data,tnew);
+    end
+end
 
 
 
