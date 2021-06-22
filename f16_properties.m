@@ -13,8 +13,8 @@ dims.xcgr = 0.35;
 dims.xcg = dims.xcgr*dims.cbar;   % ft reference CG location
 
 ctrl.elev.satlim = 25;      % deg.
-ctrl.elev.ratelim = 60;     % deg/sec
-% ctrl.elev.ratelim = 30;     % deg/sec
+% ctrl.elev.ratelim = 60;     % deg/sec
+ctrl.elev.ratelim = 30;     % deg/sec
 ctrl.elev.lag = 0.0495;     % sec. lag time constant
 ctrl.ail.satlim = 21.5;      % deg.
 ctrl.ail.ratelim = 80;     % deg/sec
