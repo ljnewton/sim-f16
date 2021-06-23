@@ -1,3 +1,5 @@
+addpath('.\F-16 Lookups')
+
 Vt = 300;   %ft/sec
 
 global x xcg coord stab gamma turnrate utrim
@@ -6,10 +8,9 @@ xcg = 0.3;
 coord = 0;
 stab = 0;
 gamma = 0;
-turnrate = 0.3;
+turnrate = 0;
 dof = 6;
 
-% uguess = [0.1385 -0.7588 -1.2e-7 6.2e-7]';
 uguess = [0 0 0 0]';
 
 [smin,ffin] = f16_trimmer(dof,uguess);
@@ -61,7 +62,7 @@ function xdot = f16_dynamics_fcn(t,x)
     
     global utrim xcg
     
-    u = utrim + 0*u_cmd(t);
+    u = utrim + u_cmd(t);
     xdot = f16_dynamics(x,u,xcg);
 end
 

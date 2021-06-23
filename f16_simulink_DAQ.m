@@ -9,7 +9,6 @@ gamma = 0 * pi/180; % radians
 turnrate = 0.3;
 dof = 6;
 
-% uguess = [0.1385 -0.7588 -1.2e-7 6.2e-7]';
 uguess = [0 0 0 0]';
 
 [smin,ffin] = f16_trimmer(dof,uguess);

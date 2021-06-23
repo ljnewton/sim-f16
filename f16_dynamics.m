@@ -104,21 +104,15 @@ function xdot = f16_dynamics(x,u,xcg)
     xdot(8) = (yPR*p*r - mass.Jxz*(p^2 - r^2) + pitch - r*mass.Hx)/mass.Jyy;
     xdot(9) = (zPQ*p*q - xPQ*q*r + mass.Jxz*roll + mass.Jxx*(yaw + q*mass.Hx))/GAM;
     
-    % Navigation
-    T1 = sin(phi)*cos(psi);
-    T2 = cos(phi)*sin(theta);
-    T3 = sin(phi)*sin(psi);
-    S1 = cos(theta)*cos(psi);
-    S2 = cos(theta)*sin(psi);
-    S3 = T1*sin(theta) - cos(phi)*sin(psi);
-    S4 = T3*sin(theta) + cos(phi)*cos(psi);
-    S5 = sin(phi)*cos(theta);
-    S6 = T2*cos(psi) + T3;
-    S7 = T2*sin(psi) - T1; S8 = cos(phi)*cos(theta);
-    
-    xdot(10) = u * S1 + v * S3 + w * S6;      % North speed
-    xdot(11) = u * S2 + v * S4 + w * S7;      % East speed
-    xdot(12) = u * sin(theta) - v * S5 - w * S8;      % Vertical speed
+    % Navigation    
+    xdot(10) = u * cos(theta)*cos(psi) + ...
+        v * (sin(phi)*cos(psi)*sin(theta) - cos(phi)*sin(psi)) +...
+        w * (cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi)); % North speed
+    xdot(11) = u * cos(theta)*sin(psi) + ...
+        v * (sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi)) + ...
+        w * (cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi)); % East speed
+    xdot(12) = u * sin(theta) - v * sin(phi)*cos(theta) - ...
+        w * cos(phi)*cos(theta);      % Vertical speed
     
 %     An = -Az/mass.g;    %normal accleration (g's)
 %     Alat = Ay/mass.g;   %lateral accleration (g's)

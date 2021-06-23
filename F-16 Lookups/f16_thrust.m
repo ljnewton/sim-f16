@@ -33,39 +33,4 @@ function thrust = f16_thrust(pow,alt,Mach)
     table = cat(3,A',B',C');
     thrust = interpn(altitude_vec,Mach_vec,pow_vec,table,alt,Mach,pow);
 
-%     % find lookup coefficients I (altitude index) and M (Mach index)
-%     H = alt/10000;
-%     I = floor(H);
-%     if I >= 6
-%         I = 5;
-%     end
-%     dH = H - I;
-% 
-%     rM = 6*Mach;
-%     M = floor(rM);
-%     if M >= 6
-%         M = 5;
-%     end
-%     dM = rM - M;
-%     cdH = 1 - dH;
-% 
-%     % lookup military power as function of altitude, Mach
-%     S = B(I,M) *cdH + B(I+1,M)*dH;
-%     T = B(I,M+1)*cdH + B(I+1,M+1)*dH;
-%     Tmil = S + (T-S)*dM;
-% 
-%     if pow < 50
-%         % interpolate between zero and military power
-%         S = A(I,M) *cdH + A(I+1,M)*dH;
-%         T = A(I,M+1)*cdH + A(I+1,M+1)*dH;
-%         Tidl = S + (T-S)*dM;
-%         thrust = Tidl + (Tmil-Tidl)*pow*0.02;
-%     else
-%         % interpolate between military power and full afterburner
-%         S = C(I,M)*cdH + C(I+1,M)*dH;
-%         T = C(I,M+1)*cdH + C(I+1,M+1)*dH;
-%         Tmax = S + (T-S)*dM;
-%         thrust = Tmil + (Tmax - Tmil)*(pow-50)*0.02;
-%     end
-
 end

@@ -1,10 +1,14 @@
 function [smin, ffin] = f16_trimmer(dof,uguess)
 
-%     r2d = 180/pi;
+%     Run a Nelder-Mead simplex optimizer to find the control inputs for
+%     steady flight at a given condition
+
+% dof: degrees of freedom
+% uguess: initial guess for trim control inputs
 
     global x
 
-    s = zeros(6,1);
+    s = zeros(6,1); % state to be optimized
     ds = zeros(6,1);
 
     s(1) = uguess(1);    % throttle
@@ -25,19 +29,14 @@ function [smin, ffin] = f16_trimmer(dof,uguess)
         ds(6) = 0.02;
     end
     
-    ds = ds*1.5;
-
     % number of iterations
     nc = input('Number of trim iterations (1000 default): ');
     if isempty(nc)
         nc = 1000;
     end
-    
-    f0 = 0;
-    ffin = 0;
 
     sigma = -1;
-    [smin, ffin, ~] = simplex(@f16_trimcost,dof,s,ds,sigma,nc,f0,ffin);
+    [smin, ffin, ~] = simplex(@f16_trimcost,s,ds,sigma,nc);
 
 end
 
@@ -98,7 +97,9 @@ function x = f16_trimconstr(x)
     end
 end
 
-function cost = f16_trimcost(s) %,x,xcg,coord,stab)
+function cost = f16_trimcost(s)
+
+    % specify cost function for F-16 trim problem
 
     global x xcgr
     thtl = s(1);
@@ -111,20 +112,23 @@ function cost = f16_trimcost(s) %,x,xcg,coord,stab)
     x = f16_trimconstr(x);
     xd = f16_dynamics(x,[thtl, el, ail, rdr]',xcgr);
     
+    % want velocity, angle of attack, sideslip angle, and angular rates to
+    % all be constants. Wind angles can be different from the
+    % user-specified vector in the global variable x, but the rates will
+    % match the user-sepcified values.
+    
     cost = xd(1)^2 + 100*(xd(2)^2 + xd(3)^2) + 10*(xd(7)^2 + xd(8)^2 + xd(9)^2);
 end
 
-function [xmin, ymin, k] = simplex(fx,n,x,dx,sd,m,~,~)
-    % minimizes func(x)
-    % x is n x 1
+function [xmin, ymin, k] = simplex(fx,x,dx,sd,m)
+    % minimizes fx(x)
+    % x is (n x 1)
     % dx contains initial perturbations in x
-    % sd set according to tolerance required; when sigma<0 the algorithm
-    % calls func m times
-
+    % sd set according to tolerance required; when sd < 0 the algorithm
+    % calls fx m times
+    
+    n = length(x);
     n_v = n + 1;
-        
-    xx = zeros(n,1);
-    xc = zeros(n,1);
     
     % y: values of the cost function for each perturbation of x
     y = zeros(n_v,1);
@@ -135,17 +139,14 @@ function [xmin, ymin, k] = simplex(fx,n,x,dx,sd,m,~,~)
     % calculate each perturbation of x
     % the first column is unperturbed
     for i = 1:n
-        for j = 1:n_v
-            V(i,j) = x(i);  % 1
-        end
+        V(i,:) = x(i);
         V(i,i+1) = x(i) + dx(i); % 2
     end
     
     % calculate the cost function at each perturbation
-    y0 = fx(x);
-    yl = y0;
-    
+    y0 = fx(x);    
     y(1) = y0;
+    
     for j = 2:n_v
         y(j) = fx(V(:,j)); % 3
     end
@@ -160,88 +161,52 @@ function [xmin, ymin, k] = simplex(fx,n,x,dx,sd,m,~,~)
         flag2 = true;
 
         % find the perturbation with the highest and lowest costs
-        yh = y(1);  % 4
-        yl = y(1);
-        nh = 1;
-        nl = 1;
-        for j = 2:n_v
-            if y(j) >= yh
-                yh = y(j);
-                nh = j;     % high index
-            elseif y(j) <= yl
-                yl = y(j);
-                nl = j;     % low index
-            end  % 5
-        end
+        yh = max(y);
+        nh = find(y == yh);
+        yl = min(y);
+        nl = find(y == yl);
         
         % yb: average cost
-        yb = y(1);
-        for j = 2:n_v
-            yb = yb + y(j); % 6
-        end
-        yb = yb/n_v;
-        d = 0;
-        for j = 1:n_v
-            d = d + (y(j) - yb)^2; % 7
-        end
+        yb = mean(y);
+        
         % sda: standard deviation of the cost 
-        sda = sqrt(d/n_v);
+        sda = sqrt(sum(y - yb)^2/n_v);
         
         if k >= m || sda <= sd
-            xmin = 0*x;
             sd = sda;
             m = k;
             ymin = y(nl);
-            for i = 1:n
-                xmin(i) = V(i,nl); % 8
-            end
+            xmin = V(:,nl);
             flag = false;
         end
         
         % xc: centroid of all the perturbations other than the highest cost
-        for i = 1:n
-            xc(i) = 0;
-            for j = 1:n_v
-                if j ~= nh % 9
-                    xc(i) = xc(i) + V(i,j);
-                end
-            end
-            xc(i) = xc(i)/n; % 10
-        end
+        xc = mean(V(:,1:n_v ~= nh),2);
         
         % reflected point
-        for i = 1:n
-            x(i) = xc(i) + 1*(xc(i) - V(i,nh)); % 11
-        end
-
+        alpha = 1;
+        x = xc + alpha*(xc - V(:,nh));
         k = k+1;
         yr = fx(x);
         
         if yr < yl
             % expanded point
-            for i = 1:n
-                xx(i) = xc(i) + 2*(x(i) - xc(i)); % 12
-            end
+            gamma = 2;
+            xx = xc + gamma*(x - xc);
             k = k+1;
             ye = fx(xx);
             
             if ye < yr
                 y(nh) = ye;
-                for i = 1:n
-                    V(i,nh) = xx(i); % 13
-                end
+                V(:,nh) = xx;
             else
                 y(nh) = yr;
-                for i = 1:n
-                    V(i,nh) = x(i); % 14
-                end
+                V(:,nh) = x;
             end
-            % go to line 4
             flag1 = false;
         end
 
         if flag1 == true
-            
             % 2nd highest value
             y2 = y(nl);
             for j = 1:n_v % 15
@@ -262,22 +227,20 @@ function [xmin, ymin, k] = simplex(fx,n,x,dx,sd,m,~,~)
             end
             
             if flag2 == true
-
-                for i = 1:n
-                    xx(i) = xc(i) + 0.5*(V(i,nh) - xc(i)); % 17
-                end
+                % contraction
+                rho = 0.5;
+                xx = xc + rho*(V(:,nh) - xc);
 
                 k = k+1;
                 yc = fx(xx);
                 if yc < yh
                     y(nh) = yc;
-                    for i = 1:n
-                        V(i,nh) = xx(i); % 18
-                    end
+                    V(:,nh) = xx;
                 else
-%                     disp([num2str(k) ' shrink'])
+                    % shrink
                     for j = 1:n_v
                         for i = 1:n
+                            sigma = 0.5;
 
                             V(i,j) = V(i,nl) + 0.5*(V(i,j) - V(i,nl));
                             if j ~= nl
