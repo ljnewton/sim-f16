@@ -1,6 +1,7 @@
 Vt = 450;   %ft/sec
 
 global x xcgr coord stab gamma turnrate utrim
+addpath('.\F-16 Lookups\')
 x = [Vt 0 0 0 0 0 0 0 0 0 0 10000 0]';
 xcgr = 0.3;
 coord = 0;
