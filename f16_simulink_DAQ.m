@@ -24,10 +24,13 @@ f16_simulink_setup
 
 %% Load Individual Test Case Here
 
-wavestart = 5;
+pitch_limiter = 70;
+sim_T = 555;
+wavestart = 500;
+tstart = 500 - 5;
 dt = 0.01;
 
-Kp = 0.65;
+Kp = 1;
 Kpi = 0.01;
 Kt = 0.439;
 Kti = 0;
@@ -35,8 +38,8 @@ pilot_delay = 0.15;
 
 ratelim_on = 1;
 
-thetaref_amp = 20;
-thetaref_per = 4;
+thetaref_amp = 21;
+thetaref_per = 8;
 
 pulse_on = 0;
 pulsewidth = 0.5;
@@ -53,15 +56,13 @@ pause
 Kp_vec = 0.1:0.15:1;
 thetaref_amp_vec = 3:3:21;                % deg
 thetaref_per_vec = 4:4:24;    % sec
-ratelim_toggle_vec = [0, 1];
+% ratelim_toggle_vec = [0, 1];
+ratelim_toggle_vec = 1;
 
-count = 1;
+count = 295;
 
 footer = '.mat';
-model = 'f16_simulink';
-
-pitch_limiter = 70;
-sim_T = 60;
+model = 'f16_simulink_mrc';
 
 for ratelim_on = ratelim_toggle_vec
     for Kp = Kp_vec
@@ -73,9 +74,9 @@ for ratelim_on = ratelim_toggle_vec
                 load_system(model);
                 simdata = sim(model,sim_T);
                 
-                simdata = time_interp(simdata,dt);
+                simdata = time_crop(time_interp(simdata,dt),tstart);
 
-                save(['./F-16 Data/f16_' num2str(count,'%05.f') footer],'simdata')
+                save(['./F-16 Data/f16_mrc_' num2str(count,'%05.f') footer],'simdata')
 
                 % Increment the file name
                 count = count + 1;
@@ -125,5 +126,15 @@ function simdata_interp = time_interp(simdata,dt)
     end
 end
 
-
+function simdata_crop = time_crop(simdata,tstart)
+    datanames = fieldnames(simdata);
+    mask = simdata.tout >= tstart;
+    
+    for i = 1:length(datanames)
+        name = datanames{i};
+        data = simdata.(name);
+        simdata_crop.(name) = data(mask,:);
+    end
+    simdata_crop.tout = simdata_crop.tout - tstart;
+end
 
