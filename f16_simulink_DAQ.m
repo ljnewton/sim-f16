@@ -27,11 +27,11 @@ f16_simulink_setup
 pitch_limiter = 70;
 sim_T = 555;
 wavestart = 500;
-wavestart = 5;
+% wavestart = 5;
 tstart = 500 - 5;
 dt = 0.01;
 
-Kp = 0.17;
+Kp = 1;
 Kpi = 0.01;
 Kt = 0.439;
 Kti = 0;
@@ -42,8 +42,8 @@ ratelim_on = 1;
 mrc_pre_gain = 1;
 mrc_post_gain = 1;
 
-thetaref_amp = 10;
-thetaref_per = 50;
+thetaref_amp = 18;
+thetaref_per = 6;
 
 pulse_on = 0;
 pulsewidth = 0.5;
@@ -61,28 +61,33 @@ Kp_vec = 0.1:0.15:1;
 thetaref_amp_vec = 3:3:21;                % deg
 thetaref_per_vec = 4:4:24;    % sec
 
-% ratelim_toggle_vec = [0, 1];
-% count = 1;
+ratelim_toggle_vec = [0, 1];
+count = 1;
+model = 'f16_simulink';
 
-ratelim_toggle_vec = 1;
-count = 295;
+% ratelim_toggle_vec = 1;
+% count = 295;
+% model = 'f16_simulink_mrc';
 
 footer = '.mat';
-model = 'f16_simulink_mrc';
 
 for ratelim_on = ratelim_toggle_vec
     for Kp = Kp_vec
         for thetaref_amp = thetaref_amp_vec
            for thetaref_per = thetaref_per_vec
                
-                disp(count)
-                disp([ratelim_on Kp thetaref_amp thetaref_per])
-                load_system(model);
-                
-                simdata = sim(model,sim_T);
-                simdata = time_crop(time_interp(simdata,dt),tstart);
+               try
+               
+                    disp(count)
+                    disp([ratelim_on Kp thetaref_amp thetaref_per])
+                    load_system(model);
 
-                save(['./F-16 Data/f16_mrc_' num2str(count,'%05.f') footer],'simdata')
+                    simdata = sim(model,sim_T);
+                    simdata = time_crop(time_interp(simdata,dt),tstart);
+
+                    save(['./F-16 Data/f16_prop_' num2str(count,'%05.f') footer],'simdata')
+               catch
+               end
 
                 % Increment the file name
                 count = count + 1;
