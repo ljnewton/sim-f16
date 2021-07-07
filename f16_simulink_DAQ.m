@@ -3,7 +3,7 @@ Vt = 450;   %ft/sec
 global x xcgr coord stab gamma turnrate utrim
 addpath('C:\Users\loren\Desktop\Research\Code\sim-f16\F-16 Lookups\')
 x = [Vt 0 0 0 0 0 0 0 0 0 0 10000 0]';
-xcgr = 0.3;
+xcgr = 0.35;
 coord = 0;
 stab = 0;
 gamma = 0 * pi/180; % radians
@@ -25,24 +25,32 @@ f16_simulink_setup
 %% Load Individual Test Case Here
 
 pitch_limiter = 70;
-sim_T = 555;
-wavestart = 500;
-% wavestart = 5;
-tstart = 500 - 5;
+% sim_T = 555;
+% wavestart = 500;
+% tstart = 500 - 5;
+
+sim_T = 60;
+wavestart = 5;
+
 dt = 0.01;
 
 Kp = 1;
 Kpi = 0.01;
-Kt = 0.439;
+Kt = 8.62;
 Kti = 0;
 pilot_delay = 0.15;
+
+Ka = -5.11;     % xcgr 0.35
+Kq = -10.34;    % xcgr 0.35
+% Ka = 0;         % xcgr 0.3
+% Kq = 0;         % xcgr 0.3
 
 ratelim_on = 1;
 
 mrc_pre_gain = 1;
 mrc_post_gain = 1;
 
-thetaref_amp = 18;
+thetaref_amp = 6;
 thetaref_per = 6;
 
 pulse_on = 0;
@@ -85,7 +93,7 @@ for ratelim_on = ratelim_toggle_vec
                     simdata = sim(model,sim_T);
                     simdata = time_crop(time_interp(simdata,dt),tstart);
 
-                    save(['./F-16 Data/f16_prop_' num2str(count,'%05.f') footer],'simdata')
+                    save(['./F-16 Data/f16_035_' num2str(count,'%05.f') footer],'simdata')
                catch
                end
 
